@@ -57,6 +57,13 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
             style = MaterialTheme.typography.titleLarge,
         )
 
+        Text(
+            text = "${foundWords.size} / ${PUZZLE_WORDS.size} found",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp),
+        )
+
         FlowRow(
             modifier = Modifier
                 .fillMaxWidth()
