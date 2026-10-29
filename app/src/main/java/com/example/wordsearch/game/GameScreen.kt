@@ -17,7 +17,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.border
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,13 +39,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 fun GameScreen(viewModel: GameViewModel = viewModel()) {
     val puzzle = viewModel.puzzle
     val selection = viewModel.selection
-    val foundWords = viewModel.foundWords
-    val isComplete = viewModel.isComplete
+    var foundWords by remember { mutableStateOf<Set<String>>(emptySet()) }
+    val isComplete = foundWords.size == PUZZLE_WORDS.size
+
+    fun onDragEnd() {
+        viewModel.onDragEnd()?.let { foundWords = foundWords + it }
+    }
 
     val foundPositions = remember(foundWords) {
         puzzle.placedWords
             .filter { it.word in foundWords }
-            .flatMap { it.positions }
+            .flatMap { it.positions.dropLast(1) }
             .toSet()
     }
     val selectedPositions = remember(selection) { selection.toSet() }
@@ -58,7 +65,7 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
         )
 
         Text(
-            text = "${foundWords.size} / ${PUZZLE_WORDS.size} found",
+            text = "${viewModel.foundCount} / ${PUZZLE_WORDS.size} found",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp),
@@ -76,7 +83,7 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
                     text = word,
                     textDecoration = if (found) TextDecoration.LineThrough else null,
                     color = if (found) {
-                        MaterialTheme.colorScheme.primary
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                     } else {
                         MaterialTheme.colorScheme.onSurface
                     },
@@ -106,8 +113,8 @@ fun GameScreen(viewModel: GameViewModel = viewModel()) {
                             onDrag = { change, _ ->
                                 viewModel.onDragTo(change.position.toGridPosition(cellSizePx))
                             },
-                            onDragEnd = { viewModel.onDragEnd() },
-                            onDragCancel = { viewModel.onDragEnd() },
+                            onDragEnd = { onDragEnd() },
+                            onDragCancel = { onDragEnd() },
                         )
                     },
             ) {
