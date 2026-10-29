@@ -12,11 +12,8 @@ class GameViewModel : ViewModel() {
     var selection by mutableStateOf<List<Position>>(emptyList())
         private set
 
-    var foundWords by mutableStateOf<Set<String>>(emptySet())
+    var foundCount by mutableStateOf(0)
         private set
-
-    val isComplete: Boolean
-        get() = foundWords.size == PUZZLE_WORDS.size
 
     private var dragStart: Position? = null
 
@@ -30,16 +27,16 @@ class GameViewModel : ViewModel() {
         selection = straightLineBetween(start, position)
     }
 
-    fun onDragEnd() {
+    fun onDragEnd(): String? {
         val match = puzzle.placedWords.firstOrNull { placed ->
-            placed.word !in foundWords &&
-                (selection == placed.positions || selection == placed.positions.reversed())
+            selection == placed.positions
         }
         if (match != null) {
-            foundWords = foundWords + match.word
+            foundCount++
         }
         selection = emptyList()
         dragStart = null
+        return match?.word
     }
 
     private fun straightLineBetween(start: Position, end: Position): List<Position> {
